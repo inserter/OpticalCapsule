@@ -59,30 +59,16 @@ Optional: `node -e "import('./OpticalCapsule.js')"` from the project root checks
 
 ## Live demo
 
-**Site:** [https://inserter.github.io/OpticalCapsule/](https://inserter.github.io/OpticalCapsule/) (`index.html` at repository root.)
+**Interactive demo:** [https://inserter.github.io/OpticalCapsule/](https://inserter.github.io/OpticalCapsule/)
 
-### Publish GitHub Pages (required — otherwise `github.io` shows 404)
+Hosted from this repo’s [`index.html`](index.html) at the root (`main`). Append `?debug=1` to log bake timings in the console—same behavior as running the demo locally over HTTP(S).
 
-The message **“There isn't a GitHub Pages site here”** means Pages is **not enabled** or **has not deployed** for this repo yet ([full docs](https://docs.github.com/en/pages)).
+### Republishing GitHub Pages (forks / maintainers)
 
-Choose **one** method:
+The `github.io/…` path **must match the repository name** (here: **`OpticalCapsule`**, not `optical-capsule`). If Pages is off or never deployed, you’ll see GitHub’s *“There isn’t a GitHub Pages site here”* — enable it under **[Settings → Pages](https://github.com/inserter/OpticalCapsule/settings/pages)**:
 
-#### A. Deploy from a branch
-
-1. Open **Settings → Pages** for **[inserter/OpticalCapsule](https://github.com/inserter/OpticalCapsule/settings/pages)**  
-2. **Build and deployment → Source**: **Deploy from a branch**  
-3. **Branch**: `main`, folder: **`/` (root)** → **Save**  
-4. Wait until the banner shows something like **“Your site is live at …”** (often ~1 minute).
-
-#### B. GitHub Actions (recommended here)
-
-This repo includes [`.github/workflows/deploy-github-pages.yml`](.github/workflows/deploy-github-pages.yml).
-
-1. **Settings → Pages** → **Source**: **GitHub Actions** ([custom workflows guide](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages))  
-2. Push to `main` (or **Actions → Deploy GitHub Pages → Run workflow**) so the job completes green.  
-3. If prompted, approve the **`github-pages`** environment deployment once.
-
-Wrong path `…/optical-capsule/…` 404s — the URL segment must match the repo name: **`OpticalCapsule`**.
+- **Deploy from a branch:** `main` + **`/` (root)** · [Pages docs](https://docs.github.com/en/pages), or  
+- **GitHub Actions:** this repo’s [`.github/workflows/deploy-github-pages.yml`](.github/workflows/deploy-github-pages.yml) · [custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
 
 ## License
 
