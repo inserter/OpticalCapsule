@@ -1,0 +1,6 @@
+{
+  "name": "optical-capsule",
+  "private": true,
+  "type": "module",
+  "description": "Glass / resin capsule button optical baking for the web (demo + reusable core)."
+}

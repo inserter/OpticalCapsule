@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Optical Capsule</title>
+  <link rel="stylesheet" href="OpticalCapsule.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <svg class="svg-filter-defs" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <filter id="oc-backdrop-displace" color-interpolation-filters="sRGB" x="-40%" y="-40%" width="180%" height="180%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.009 0.055" numOctaves="2" seed="21" result="noise"></feTurbulence>
+        <feGaussianBlur in="noise" stdDeviation="0.75" result="smoothNoise"></feGaussianBlur>
+        <feDisplacementMap in="SourceGraphic" in2="smoothNoise" scale="14" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+    </defs>
+  </svg>
+  <main class="page">
+    <header>
+      <h1>Optical Capsule</h1>
+      <p class="summary">Highlights are generated from a sampled capsule height field, surface normals, Fresnel rim, and specular thresholds—use this page to tune rigs, then reuse <code>OpticalCapsule.js</code> / <code>OpticalCapsule.css</code> on your own UI.</p>
+    </header>
+
+    <section class="light-control-panel" aria-label="Background controls">
+      <div class="light-control-header">
+        <h2>Background Rig</h2>
+        <p>Controls replace the page environment behind the optical material with solid, gradient, or procedural texture backgrounds.</p>
+      </div>
+      <div class="light-controls">
+        <div class="control-field">
+          <label for="background-mode">Texture</label>
+          <select id="background-mode">
+            <option value="solid">solid</option>
+            <option value="radial">radial light</option>
+            <option value="grid">grid</option>
+            <option value="dots">dot field</option>
+            <option value="brushed">brushed</option>
+            <option value="image">image URL</option>
+          </select>
+        </div>
+        <div class="control-field">
+          <label for="background-base">Base color</label>
+          <input id="background-base" type="color">
+        </div>
+        <div class="control-field">
+          <label for="background-accent">Accent color</label>
+          <input id="background-accent" type="color">
+        </div>
+        <div class="control-field">
+          <label for="background-opacity">Texture strength <span id="background-opacity-value" class="control-value"></span></label>
+          <input id="background-opacity" type="range" min="0" max="0.8" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="background-scale">Texture scale <span id="background-scale-value" class="control-value"></span></label>
+          <input id="background-scale" type="range" min="8" max="80" step="1">
+        </div>
+        <div class="control-field">
+          <label for="background-image">Image URL</label>
+          <input id="background-image" type="url" placeholder="https://...">
+        </div>
+      </div>
+    </section>
+
+    <section class="light-control-panel" aria-label="Global light controls">
+      <div class="light-control-header">
+        <h2>Global Light Rig</h2>
+        <p>Controls edit the shared light field used by every capsule before the Canvas textures are baked.</p>
+      </div>
+      <div class="light-controls">
+        <div class="control-field">
+          <label for="light-select">Light</label>
+          <select id="light-select"></select>
+        </div>
+        <div class="control-field">
+          <label for="light-color">Color</label>
+          <input id="light-color" type="color">
+        </div>
+        <div class="control-field">
+          <label for="light-intensity">Intensity <span id="light-intensity-value" class="control-value"></span></label>
+          <input id="light-intensity" type="range" min="0" max="2" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="light-range">Range <span id="light-range-value" class="control-value"></span></label>
+          <input id="light-range" type="range" min="0.05" max="1.2" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="light-distance">Distance <span id="light-distance-value" class="control-value"></span></label>
+          <input id="light-distance" type="range" min="0.35" max="2.5" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="light-azimuth">Angle X/Y <span id="light-azimuth-value" class="control-value"></span></label>
+          <input id="light-azimuth" type="range" min="-180" max="180" step="1">
+        </div>
+        <div class="control-field">
+          <label for="light-elevation">Angle Z <span id="light-elevation-value" class="control-value"></span></label>
+          <input id="light-elevation" type="range" min="5" max="85" step="1">
+        </div>
+      </div>
+    </section>
+
+    <section class="light-control-panel" aria-label="Optical material controls">
+      <div class="light-control-header">
+        <h2>Material Rig</h2>
+        <p>Controls define the resin color, refraction, absorption, and internal transmission used by the baked optical layers.</p>
+      </div>
+      <div class="light-controls">
+        <div class="control-field control-field-span">
+          <label for="material-preset">Preset</label>
+          <select id="material-preset">
+            <option value="resin">Clear amber (default)</option>
+            <option value="glass">Glass</option>
+            <option value="crystal">Crystal</option>
+            <option value="diamond">Diamond</option>
+            <option value="ruby">Ruby</option>
+            <option value="sapphire">Sapphire</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="control-field control-field-span material-experimental-field">
+          <label class="control-checkbox-label" for="material-backdrop-displace">
+            <input id="material-backdrop-displace" type="checkbox">
+            <span>Backdrop displacement</span>
+          </label>
+        </div>
+        <div class="control-field">
+          <label for="material-color">Material color</label>
+          <input id="material-color" type="color">
+        </div>
+        <div class="control-field">
+          <label for="material-ior">IOR <span id="material-ior-value" class="control-value"></span></label>
+          <input id="material-ior" type="range" min="1" max="2.5" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="material-transmission">Transmission <span id="material-transmission-value" class="control-value"></span></label>
+          <input id="material-transmission" type="range" min="0" max="0.85" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="material-absorption">Absorption <span id="material-absorption-value" class="control-value"></span></label>
+          <input id="material-absorption" type="range" min="0" max="1.6" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="material-thickness">Thickness <span id="material-thickness-value" class="control-value"></span></label>
+          <input id="material-thickness" type="range" min="0.2" max="1.4" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="material-dispersion">Dispersion <span id="material-dispersion-value" class="control-value"></span></label>
+          <input id="material-dispersion" type="range" min="0" max="0.16" step="0.001">
+        </div>
+        <div class="control-field">
+          <label for="material-internal">Internal reflection <span id="material-internal-value" class="control-value"></span></label>
+          <input id="material-internal" type="range" min="0" max="1.5" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="material-lift">Page lift <span id="material-lift-value" class="control-value"></span></label>
+          <input id="material-lift" type="range" min="0" max="1.2" step="0.01">
+        </div>
+      </div>
+    </section>
+
+    <section class="light-control-panel" aria-label="Button specification controls">
+      <div class="light-control-header">
+        <h2>Button Spec Rig</h2>
+        <p>Controls define capsule dimensions, Z-section profile, shell edges, and label color / transparency / edge shadows.</p>
+      </div>
+      <div class="light-controls">
+        <div class="control-field">
+          <label for="button-width-scale">Width scale <span id="button-width-scale-value" class="control-value"></span></label>
+          <input id="button-width-scale" type="range" min="0.65" max="1.45" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="button-height-scale">Height scale <span id="button-height-scale-value" class="control-value"></span></label>
+          <input id="button-height-scale" type="range" min="0.65" max="1.45" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="button-top-height">Top Z h1 <span id="button-top-height-value" class="control-value"></span></label>
+          <input id="button-top-height" type="range" min="4" max="40" step="0.5">
+        </div>
+        <div class="control-field">
+          <label for="button-edge-height">Edge Z h2 <span id="button-edge-height-value" class="control-value"></span></label>
+          <input id="button-edge-height" type="range" min="0" max="30" step="0.5">
+        </div>
+        <div class="control-field">
+          <label for="button-z-radius">Z radius r2 <span id="button-z-radius-value" class="control-value"></span></label>
+          <input id="button-z-radius" type="range" min="0" max="100" step="1">
+        </div>
+        <div class="control-field">
+          <label for="button-shoulder">Shoulder width <span id="button-shoulder-value" class="control-value"></span></label>
+          <input id="button-shoulder" type="range" min="0.06" max="0.42" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="button-bevel">Bevel width <span id="button-bevel-value" class="control-value"></span></label>
+          <input id="button-bevel" type="range" min="0.04" max="0.34" step="0.01">
+        </div>
+        <div class="control-field control-field-span">
+          <span class="control-group-label">Shell / edge</span>
+        </div>
+        <div class="control-field">
+          <label for="shell-outer-color">Outer edge color</label>
+          <input id="shell-outer-color" type="color">
+        </div>
+        <div class="control-field">
+          <label for="shell-outer-transparency">Outer ring transparency <span id="shell-outer-transparency-value" class="control-value"></span></label>
+          <input id="shell-outer-transparency" type="range" min="0" max="1" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="shell-outer-width">Outer edge width scale <span id="shell-outer-width-value" class="control-value"></span></label>
+          <input id="shell-outer-width" type="range" min="0" max="2" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="shell-outer-fill">Outer shell fill <span id="shell-outer-fill-value" class="control-value"></span></label>
+          <input id="shell-outer-fill" type="range" min="0" max="0.6" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="shell-inner-color">Inner edge color</label>
+          <input id="shell-inner-color" type="color">
+        </div>
+        <div class="control-field">
+          <label for="shell-inner-transparency">Inner ring transparency <span id="shell-inner-transparency-value" class="control-value"></span></label>
+          <input id="shell-inner-transparency" type="range" min="0" max="1" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="shell-inner-width">Inner edge width scale <span id="shell-inner-width-value" class="control-value"></span></label>
+          <input id="shell-inner-width" type="range" min="0" max="2" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="shell-inset-color">Inset ring color</label>
+          <input id="shell-inset-color" type="color">
+        </div>
+        <div class="control-field">
+          <label for="shell-inset-transparency">Inset ring transparency <span id="shell-inset-transparency-value" class="control-value"></span></label>
+          <input id="shell-inset-transparency" type="range" min="0" max="1" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="shell-inset-width">Inset ring width <span id="shell-inset-width-value" class="control-value"></span></label>
+          <input id="shell-inset-width" type="range" min="0" max="12" step="0.5">
+        </div>
+
+        <div class="control-field control-field-span">
+          <span class="control-group-label">Label</span>
+        </div>
+        <div class="control-field control-field-span">
+          <label for="label-text">Button text</label>
+          <input id="label-text" type="text" maxlength="64" placeholder="Optical Capsule" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="control-field">
+          <label for="label-color">Text color</label>
+          <input id="label-color" type="color">
+        </div>
+        <div class="control-field">
+          <label for="label-transparency">Text transparency <span id="label-transparency-value" class="control-value"></span></label>
+          <input id="label-transparency" type="range" min="0" max="1" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="label-shadow-dark-color">Edge shadow color</label>
+          <input id="label-shadow-dark-color" type="color">
+        </div>
+        <div class="control-field">
+          <label for="label-shadow-dark-opacity">Edge shadow opacity <span id="label-shadow-dark-opacity-value" class="control-value"></span></label>
+          <input id="label-shadow-dark-opacity" type="range" min="0" max="1" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="label-shadow-dark-offset">Edge shadow offset Y <span id="label-shadow-dark-offset-value" class="control-value"></span></label>
+          <input id="label-shadow-dark-offset" type="range" min="0" max="6" step="0.1">
+        </div>
+        <div class="control-field">
+          <label for="label-shadow-dark-blur">Edge shadow blur <span id="label-shadow-dark-blur-value" class="control-value"></span></label>
+          <input id="label-shadow-dark-blur" type="range" min="0" max="8" step="0.1">
+        </div>
+        <div class="control-field">
+          <label for="label-shadow-light-color">Edge highlight color</label>
+          <input id="label-shadow-light-color" type="color">
+        </div>
+        <div class="control-field">
+          <label for="label-shadow-light-opacity">Edge highlight opacity <span id="label-shadow-light-opacity-value" class="control-value"></span></label>
+          <input id="label-shadow-light-opacity" type="range" min="0" max="1" step="0.01">
+        </div>
+        <div class="control-field">
+          <label for="label-shadow-light-blur">Edge highlight blur <span id="label-shadow-light-blur-value" class="control-value"></span></label>
+          <input id="label-shadow-light-blur" type="range" min="0" max="8" step="0.1">
+        </div>
+
+      </div>
+    </section>
+
+    <section class="cross-section-panel" aria-label="Optical capsule orthographic views">
+      <div class="cross-section-header">
+        <h2>Orthographic Optical Views</h2>
+        <p>Generated from the current Button Spec Rig: X-Y top view, X-Z section, and Y-Z section with the shared light-path model.</p>
+      </div>
+      <div id="xz-cross-section" class="cross-section-figure"></div>
+    </section>
+
+    <section class="light-control-panel presentation-panel" aria-label="Per-state capsule presentation (CSS overlay)">
+      <div class="light-control-header">
+        <h2>Presentation states (CSS overlay)</h2>
+        <p>Four separate <strong>xs</strong> previews — one column per interaction stance. Adjust opacity, brightness, saturation, glow, <strong>and button tint</strong> per column only. Uses CSS variables on each column’s preview stage — <strong>no optical rebake</strong>.</p>
+      </div>
+      <div class="presentation-columns" role="group" aria-label="Presentation state columns">
+
+        <div class="presentation-column" data-presentation-state="rest">
+          <h3 class="presentation-column-heading">Rest</h3>
+          <div class="presentation-column-preview">
+            <div class="capsule-stage size-xs presentation-state-stage" aria-label="Rest state preview"></div>
+          </div>
+          <div class="presentation-column-controls light-controls">
+            <div class="control-field">
+              <label for="pres-rest-opacity">Opacity <span id="pres-rest-opacity-value" class="control-value"></span></label>
+              <input id="pres-rest-opacity" type="range" min="0" max="1" step="0.01" value="1">
+            </div>
+            <div class="control-field">
+              <label for="pres-rest-brightness">Brightness <span id="pres-rest-brightness-value" class="control-value"></span></label>
+              <input id="pres-rest-brightness" type="range" min="0.4" max="1.6" step="0.01" value="1">
+            </div>
+            <div class="control-field">
+              <label for="pres-rest-saturate">Saturation <span id="pres-rest-saturate-value" class="control-value"></span></label>
+              <input id="pres-rest-saturate" type="range" min="0" max="1.8" step="0.01" value="1">
+            </div>
+            <div class="control-field">
+              <label for="pres-rest-glow-blur">Glow blur <span id="pres-rest-glow-blur-value" class="control-value"></span></label>
+              <input id="pres-rest-glow-blur" type="range" min="0" max="40" step="0.5" value="0">
+            </div>
+            <div class="control-field">
+              <label for="pres-rest-glow-alpha">Glow strength <span id="pres-rest-glow-alpha-value" class="control-value"></span></label>
+              <input id="pres-rest-glow-alpha" type="range" min="0" max="1" step="0.01" value="0.55">
+            </div>
+            <div class="control-field">
+              <label for="pres-rest-glow-color">Glow color</label>
+              <input id="pres-rest-glow-color" type="color" value="#aad4ff">
+            </div>
+            <div class="control-field">
+              <label for="pres-rest-button-color">Button tint color</label>
+              <input id="pres-rest-button-color" type="color" value="#ffffff">
+            </div>
+            <div class="control-field">
+              <label for="pres-rest-button-tint">Button tint strength <span id="pres-rest-button-tint-value" class="control-value"></span></label>
+              <input id="pres-rest-button-tint" type="range" min="0" max="1" step="0.01" value="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="presentation-column" data-presentation-state="hover">
+          <h3 class="presentation-column-heading">Hover</h3>
+          <div class="presentation-column-preview">
+            <div class="capsule-stage size-xs presentation-state-stage" aria-label="Hover state preview"></div>
+          </div>
+          <div class="presentation-column-controls light-controls">
+            <div class="control-field">
+              <label for="pres-hover-opacity">Opacity <span id="pres-hover-opacity-value" class="control-value"></span></label>
+              <input id="pres-hover-opacity" type="range" min="0" max="1" step="0.01" value="1">
+            </div>
+            <div class="control-field">
+              <label for="pres-hover-brightness">Brightness <span id="pres-hover-brightness-value" class="control-value"></span></label>
+              <input id="pres-hover-brightness" type="range" min="0.4" max="1.6" step="0.01" value="1.08">
+            </div>
+            <div class="control-field">
+              <label for="pres-hover-saturate">Saturation <span id="pres-hover-saturate-value" class="control-value"></span></label>
+              <input id="pres-hover-saturate" type="range" min="0" max="1.8" step="0.01" value="1">
+            </div>
+            <div class="control-field">
+              <label for="pres-hover-glow-blur">Glow blur <span id="pres-hover-glow-blur-value" class="control-value"></span></label>
+              <input id="pres-hover-glow-blur" type="range" min="0" max="40" step="0.5" value="0">
+            </div>
+            <div class="control-field">
+              <label for="pres-hover-glow-alpha">Glow strength <span id="pres-hover-glow-alpha-value" class="control-value"></span></label>
+              <input id="pres-hover-glow-alpha" type="range" min="0" max="1" step="0.01" value="0.55">
+            </div>
+            <div class="control-field">
+              <label for="pres-hover-glow-color">Glow color</label>
+              <input id="pres-hover-glow-color" type="color" value="#aad4ff">
+            </div>
+            <div class="control-field">
+              <label for="pres-hover-button-color">Button tint color</label>
+              <input id="pres-hover-button-color" type="color" value="#ffffff">
+            </div>
+            <div class="control-field">
+              <label for="pres-hover-button-tint">Button tint strength <span id="pres-hover-button-tint-value" class="control-value"></span></label>
+              <input id="pres-hover-button-tint" type="range" min="0" max="1" step="0.01" value="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="presentation-column" data-presentation-state="pressed">
+          <h3 class="presentation-column-heading">Pressed</h3>
+          <div class="presentation-column-preview">
+            <div class="capsule-stage size-xs presentation-state-stage" aria-label="Pressed state preview"></div>
+          </div>
+          <div class="presentation-column-controls light-controls">
+            <div class="control-field">
+              <label for="pres-pressed-opacity">Opacity <span id="pres-pressed-opacity-value" class="control-value"></span></label>
+              <input id="pres-pressed-opacity" type="range" min="0" max="1" step="0.01" value="1">
+            </div>
+            <div class="control-field">
+              <label for="pres-pressed-brightness">Brightness <span id="pres-pressed-brightness-value" class="control-value"></span></label>
+              <input id="pres-pressed-brightness" type="range" min="0.4" max="1.6" step="0.01" value="0.93">
+            </div>
+            <div class="control-field">
+              <label for="pres-pressed-saturate">Saturation <span id="pres-pressed-saturate-value" class="control-value"></span></label>
+              <input id="pres-pressed-saturate" type="range" min="0" max="1.8" step="0.01" value="1">
+            </div>
+            <div class="control-field">
+              <label for="pres-pressed-glow-blur">Glow blur <span id="pres-pressed-glow-blur-value" class="control-value"></span></label>
+              <input id="pres-pressed-glow-blur" type="range" min="0" max="40" step="0.5" value="0">
+            </div>
+            <div class="control-field">
+              <label for="pres-pressed-glow-alpha">Glow strength <span id="pres-pressed-glow-alpha-value" class="control-value"></span></label>
+              <input id="pres-pressed-glow-alpha" type="range" min="0" max="1" step="0.01" value="0.55">
+            </div>
+            <div class="control-field">
+              <label for="pres-pressed-glow-color">Glow color</label>
+              <input id="pres-pressed-glow-color" type="color" value="#aad4ff">
+            </div>
+            <div class="control-field">
+              <label for="pres-pressed-button-color">Button tint color</label>
+              <input id="pres-pressed-button-color" type="color" value="#ffffff">
+            </div>
+            <div class="control-field">
+              <label for="pres-pressed-button-tint">Button tint strength <span id="pres-pressed-button-tint-value" class="control-value"></span></label>
+              <input id="pres-pressed-button-tint" type="range" min="0" max="1" step="0.01" value="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="presentation-column" data-presentation-state="inactive">
+          <h3 class="presentation-column-heading">Inactive</h3>
+          <div class="presentation-column-preview">
+            <div class="capsule-stage size-xs presentation-state-stage" aria-label="Inactive state preview"></div>
+          </div>
+          <div class="presentation-column-controls light-controls">
+            <div class="control-field">
+              <label for="pres-inactive-opacity">Opacity <span id="pres-inactive-opacity-value" class="control-value"></span></label>
+              <input id="pres-inactive-opacity" type="range" min="0" max="1" step="0.01" value="0.52">
+            </div>
+            <div class="control-field">
+              <label for="pres-inactive-brightness">Brightness <span id="pres-inactive-brightness-value" class="control-value"></span></label>
+              <input id="pres-inactive-brightness" type="range" min="0.4" max="1.6" step="0.01" value="1">
+            </div>
+            <div class="control-field">
+              <label for="pres-inactive-saturate">Saturation <span id="pres-inactive-saturate-value" class="control-value"></span></label>
+              <input id="pres-inactive-saturate" type="range" min="0" max="1.8" step="0.01" value="0.65">
+            </div>
+            <div class="control-field">
+              <label for="pres-inactive-glow-blur">Glow blur <span id="pres-inactive-glow-blur-value" class="control-value"></span></label>
+              <input id="pres-inactive-glow-blur" type="range" min="0" max="40" step="0.5" value="0">
+            </div>
+            <div class="control-field">
+              <label for="pres-inactive-glow-alpha">Glow strength <span id="pres-inactive-glow-alpha-value" class="control-value"></span></label>
+              <input id="pres-inactive-glow-alpha" type="range" min="0" max="1" step="0.01" value="0.35">
+            </div>
+            <div class="control-field">
+              <label for="pres-inactive-glow-color">Glow color</label>
+              <input id="pres-inactive-glow-color" type="color" value="#8899aa">
+            </div>
+            <div class="control-field">
+              <label for="pres-inactive-button-color">Button tint color</label>
+              <input id="pres-inactive-button-color" type="color" value="#9aaaba">
+            </div>
+            <div class="control-field">
+              <label for="pres-inactive-button-tint">Button tint strength <span id="pres-inactive-button-tint-value" class="control-value"></span></label>
+              <input id="pres-inactive-button-tint" type="range" min="0" max="1" step="0.01" value="0.38">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="hero-stage" aria-label="Optical capsule primary sample">
+      <div class="capsule-stage size-l" data-size="l"></div>
+    </section>
+
+    <section class="size-stack" aria-label="Optical capsule size scale">
+      <div class="size-row">
+        <span class="size-label">xxs</span>
+        <div class="capsule-stage size-xxs" data-size="xxs"></div>
+      </div>
+      <div class="size-row">
+        <span class="size-label">xs</span>
+        <div class="capsule-stage size-xs" data-size="xs"></div>
+      </div>
+      <div class="size-row">
+        <span class="size-label">s</span>
+        <div class="capsule-stage size-s" data-size="s"></div>
+      </div>
+      <div class="size-row">
+        <span class="size-label">m</span>
+        <div class="capsule-stage size-m" data-size="m"></div>
+      </div>
+      <div class="size-row">
+        <span class="size-label">l</span>
+        <div class="capsule-stage size-l" data-size="l"></div>
+      </div>
+      <div class="size-row">
+        <span class="size-label">xl</span>
+        <div class="capsule-stage size-xl" data-size="xl"></div>
+      </div>
+      <div class="size-row">
+        <span class="size-label">xxl</span>
+        <div class="capsule-stage size-xxl" data-size="xxl"></div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

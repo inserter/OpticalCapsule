@@ -1,0 +1,112 @@
+/**
+ * Optical Capsule — reusable capsule / underlay / SVG layer styles.
+ * Pair with OpticalCapsule.js on any page that hosts .capsule-stage and .optical-capsule.
+ */
+
+.svg-filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+body[data-bg-mode="image"] .optical-capsule {
+  /*
+   * In image mode the button is a frosted-glass window:
+   * - Nearly transparent background (no dark gradient fill)
+   * - Strong backdrop-filter lets the photo show through + blurs it
+   * - Optical highlights (rim, spec) from canvas still apply via screen blend
+   */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.01) 55%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px) saturate(1.5) brightness(1.04);
+}
+
+.capsule-stage {
+  position: relative;
+  width: var(--w);
+  min-height: calc(var(--h) + var(--drop));
+  margin-inline: auto;
+}
+
+.underlay-svg {
+  position: absolute;
+  left: calc(-1 * var(--underlay-pad-left, calc(var(--h) * 0.72)));
+  top: calc(-1 * var(--underlay-pad-top, calc(var(--h) * 0.54)));
+  z-index: 0;
+  width: var(--underlay-w, calc(var(--w) + var(--h) * 1.45));
+  height: var(--underlay-h, calc(var(--h) * 1.1));
+  pointer-events: none;
+  overflow: visible;
+}
+
+.optical-capsule {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  width: var(--w);
+  height: var(--h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: calc(var(--h) / 2);
+  padding: 0 calc(var(--h) * 0.28);
+  color: white;
+  background:
+    linear-gradient(180deg, rgba(24, 20, 16, 0.12), rgba(8, 6, 5, 0.08) 58%, rgba(0, 0, 0, 0.1));
+  backdrop-filter: blur(14px) saturate(1.18);
+  overflow: hidden;
+}
+
+.optical-capsule.optical-capsule--displace-backdrop {
+  -webkit-backdrop-filter: url("#oc-backdrop-displace") blur(14px) saturate(1.18);
+  backdrop-filter: url("#oc-backdrop-displace") blur(14px) saturate(1.18);
+}
+
+body[data-bg-mode="image"] .optical-capsule.optical-capsule--displace-backdrop {
+  -webkit-backdrop-filter: url("#oc-backdrop-displace") blur(24px) saturate(1.5) brightness(1.04);
+  backdrop-filter: url("#oc-backdrop-displace") blur(24px) saturate(1.5) brightness(1.04);
+}
+
+.optical-capsule span {
+  position: relative;
+  z-index: 4;
+  font-size: var(--fs);
+  font-weight: 430;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.optical-svg {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.optical-svg .screen {
+  mix-blend-mode: screen;
+}
+
+.optical-svg .rim {
+  mix-blend-mode: screen;
+}
+
+.size-xxs { --w: 128px; --h: 40px; --fs: 13px; --drop: 44px; --caustic: 0.38; }
+.size-xs  { --w: 160px; --h: 50px; --fs: 15px; --drop: 54px; --caustic: 0.45; }
+.size-s   { --w: 210px; --h: 64px; --fs: 18px; --drop: 68px; --caustic: 0.52; }
+.size-m   { --w: 280px; --h: 84px; --fs: 24px; --drop: 88px; --caustic: 0.6; }
+.size-l   { --w: 360px; --h: 112px; --fs: 31px; --drop: 118px; --caustic: 0.68; }
+.size-xl  { --w: 430px; --h: 132px; --fs: 36px; --drop: 140px; --caustic: 0.76; }
+.size-xxl { --w: 520px; --h: 160px; --fs: 44px; --drop: 170px; --caustic: 0.84; }
+
+@media (max-width: 720px) {
+  .capsule-stage {
+    transform: scale(min(1, calc((100vw - 92px) / var(--w))));
+    transform-origin: center center;
+  }
+}
