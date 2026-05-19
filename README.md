@@ -59,11 +59,15 @@ Optional: `node -e "import('./OpticalCapsule.js')"` from the project root checks
 
 ## Live demo
 
-After you publish this repo under [github.com/inserter](https://github.com/inserter) and enable [GitHub Pages](https://pages.github.com/) on the `main` branch (root), the demo URL will be:
+Repository: **[inserter/OpticalCapsule](https://github.com/inserter/OpticalCapsule)**. Enable [GitHub Pages](https://pages.github.com/) under **Settings → Pages** with source **Deploy from branch** → **`main`** → **`/` (root)**, wait for the deployment to finish.
 
-**https://inserter.github.io/optical-capsule/index.html**
+Then open (path matches the **repository name**, including capitals):
 
-(Adjust `optical-capsule` if you use a different repository name.)
+**[https://inserter.github.io/OpticalCapsule/](https://inserter.github.io/OpticalCapsule/)**
+
+(`index.html` is optional: `…/OpticalCapsule/index.html` is the same home page.)
+
+If `https://inserter.github.io/optical-capsule/…` 404s, that path is wrong for this repo — use **`OpticalCapsule`** in the URL, not `optical-capsule`.
 
 ## License
 
